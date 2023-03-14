@@ -1,0 +1,5 @@
+__pycache__/
+gen/
+nlu.yml
+stories.yml
+file_name.csv
