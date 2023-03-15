@@ -1,62 +1,65 @@
 import pandas as pd
 from workout import rm_duplicates
-
-# Read the CSV file into a pandas dataframe
-df = pd.read_csv("file_name.csv")
-
-# Extract the unique values of intents and actions from the dataframe
-intents = df['intent/action name'].unique().tolist()
-actions = [i.split(':')[1].strip() for i in intents if 'action' in i]
-intents = [i.split(':')[1].strip() for i in intents if 'intent' in i]
-# Create the nlu.yml file
-with open('nlu.yml', 'w') as f:
-    for intent in intents:
-        examples = df[df['sms type']=='incoming'][df['intent/action name']=='intent: '+intent]['message'].tolist()
-        examples = "\n    - ".join(examples)
-        f.write(f"- intent: {intent}\n")
-        f.write(f"  examples: |\n    - {examples}\n\n")
+import math
+import yaml
+df = pd.read_csv("Cash offer question report-2023-03-08-23-10-56.xlsx - Copy of Cash offer question report.csv")
+intents = df['intent & action'].unique().tolist()
+intents = [i.split(':')[1].strip() for i in intents if isinstance(i, str) and 'intent' in i]
+intent=[]
+for value in intents:
+    if value != '':
+       intent.append(value)
+value2=[]
+for value1 in intent:
+    if value1 not in value2:
+        value2.append(value1)
+print(value2)
+apns = df['Lead: Real Estate Number'].unique().tolist()
+incoming = df[df['SMS History: SMS Type']=='Incoming'].values.tolist()
+incoming_str = str(incoming)
+incoming_str = incoming_str.encode('utf-8', errors='ignore')
+data_str = incoming_str.decode('utf-8', errors='ignore')
+data_str=data_str.strip()
+real_estate_number=[]
+for i in range(len(apns)):
+    if str(apns[i]) in data_str:
+        real_estate_number.append(apns[i])
+total_value=[]
+for apn1 in real_estate_number:
+    result = df[(df['Lead: Real Estate Number'] == apn1)]['intent & action'].tolist()
+    total_value.append(result)
+res=[]
+intent_list=[]
+with open('nlu.yml', 'w',encoding="utf-8") as f:
+    for i in range(len(value2)):
+        intent_list.append(value2[i])
+        value2[i]='- intent: '+value2[i]
+        examples = df[(df['SMS History: SMS Type']=='Incoming') & (df['intent & action']==str(value2[i]))]['Message'].unique().tolist()
+        result=[]
+        for item in examples:
+              item= ' '.join(item.splitlines())
+              result.append(item)
+        f.write(f"{value2[i]}\n")
+        f.write("  examples: |\n")
+        for i in range(len(result)):
+            f.write(f"    - {result[i]}\n")
 # Create the stories.yml file
 with open('stories.yml', 'w') as f:
-    stories = []
-    apns = df['apn'].unique().tolist()
-    act_list=[]
-    int_list=[]
-    total_value=[]
-    for apn in apns:
-        df_apn = df[df['apn'] == apn]
-        actions_list = df_apn['intent/action name'].tolist()
-        intents_list = df_apn['intent/action name'].tolist()
-        total_value.append(actions_list)
-        act_list.append(actions_list)
-        int_list.append(intents_list)
-    for i in range(len(total_value)):
-        total_value[i].append(apns[i])
-    total_value1=total_value
-    for i in range(len(total_value)):
-        del total_value[i][-1]
+    total_value = [inner_list for inner_list in total_value if not any(isinstance(element, float) and math.isnan(element) for element in inner_list)]
     my_instance = rm_duplicates()
-    ac_lists = my_instance.remove_duplicates(act_list)
-    in_lists = my_instance.remove_duplicates(int_list)
-    total_value=my_instance.remove_duplicates(total_value)
-    print(total_value)
-    apn=[]
-
+    # total_value=my_instance.remove_duplicates(total_value)
+    total_value = list(set(tuple(i) for i in total_value))
     for i in range(len(total_value)):
-        index=total_value1.index(total_value[i])
-        apn.append(apns[index])
-
-    list1 = []
-    list2 = []
-    print(apn)
-    for aclist in ac_lists:
-     actions_list = [j.split(':')[1].strip() for j in aclist if 'action' in j]
-     list1.append(actions_list)
-    for inlist in in_lists: 
-     intents_list = [j.split(':')[1].strip() for j in inlist if 'intent' in j]
-     list2.append(intents_list)
-    for i in range(len(apn)):
-        f.write(f"- story: story-{apn[i]}\n")
+        f.write(f"- story: story-{i+1}\n")
         f.write("  steps:\n")
+        f.write(f"     - intent: start_cash_offer\n")
         for j in total_value[i]:
-          f.write(f"  - {j}\n")
+          if 'intent' in j or 'action' in j:
+            f.write(f"     {j}\n")
+          else:
+            print(j[2::])
+            if j[2::] not in intent_list:
+                 f.write(f"     - action:{j[1::]}\n")
+            else:
+                 f.write(f"     - intent:{j[1::]}\n")  
         f.write("\n")
