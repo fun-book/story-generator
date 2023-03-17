@@ -2,22 +2,35 @@ class rm_duplicates():
 
     def remove_duplicates(self, actions_lists):
         duplicates = set()
+        actions_lists1=[]
+        # this step list is converted to string so easily identified dupilicates and partial dupilicates
+        for i in range(len(actions_lists)):
+             list=' '.join(actions_lists[i])
+             list=list.replace('-','')
+             list=list.replace(': ','')
+             list=list.replace(' ','')
+             actions_lists1.append(list)
         unique_lists = []
-        for lst in actions_lists:
+        for i in range(len(actions_lists)):
             is_duplicate = False
             is_partial = False
-            for other_lst in actions_lists:
-                if lst is other_lst:
+            for j in range(len(actions_lists)):
+                if actions_lists1[i] is actions_lists1[j]:
                     continue
-                if lst == other_lst:
+                # find dupicates  and remove dupilicates
+                if actions_lists1[i] == actions_lists1[j]:
                     is_duplicate = True
-                    duplicates.add(tuple(lst))
+                    actions_lists1[i]='NULL'
+                    actions_lists[i]='NULL'
                     break
-                if all(elem in other_lst for elem in lst):
+                # find partial dupiliactes and remove dupilicates
+                if actions_lists1[i]!='NULL':
+                  if actions_lists1[i]  in actions_lists1[j]:
                     is_partial = True
-                    duplicates.add(tuple(lst))
+                    actions_lists1[i]='NULL'
+                    actions_lists[i]='NULL'
                     break
-            if not is_duplicate and not is_partial:
-             unique_lists.append(lst)
-        unique_lists = [lst for lst in unique_lists if tuple(lst) not in duplicates]
+            # check the variable is not ddupicates and not partial
+            if actions_lists[i] != 'NULL':
+               unique_lists.append(actions_lists[i])
         return unique_lists
